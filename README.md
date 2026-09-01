@@ -119,6 +119,31 @@ Two subtleties it handles, both caught by tests:
 
 After `MAX_ATTEMPTS` it throws `ConcurrencyError` rather than spinning.
 
+## Getting the data out
+
+Once the draft finishes, three export links appear in the header. They also
+work any time via URL:
+
+| URL | What you get |
+|---|---|
+| `/api/export?format=rosters` | One row per team, one column per roster slot, plus `total_proj_2026`. The human-readable result. |
+| `/api/export?format=picks` | One row per pick in draft order with the full stat line (rank, ADP, auction value, projection, 2025 actual, bye, injury). |
+| `/api/export?format=json` | Everything structured, players resolved inline. |
+
+Both CSVs send `Content-Disposition: attachment`, so they download with a
+dated filename. Drafter tokens are stripped from every export.
+
+Sample `rosters` output:
+
+```
+draft_slot,drafter,filled,QB_1,RB_1,RB_2,TE_WR_1,TE_WR_2,TE_WR_3,K_1,total_proj_2026
+1,Steve,7/7,Kyler Murray (QB MIN),Jaylen Wright (RB MIA),...,Nick Folk (K ATL),826.6
+```
+
+The draft state also lives in `.data/room.json` locally (or the `jpll:room`
+key in Redis when deployed), but the export endpoint is the supported way to
+read it - it resolves player ids to names and stats.
+
 ## Deploying (free)
 
 **Vercel Hobby limits are per-account, not per-project** - 100 GB transfer,
@@ -166,10 +191,20 @@ allowance. One tab left open for a month at 2s polling would be ~1.3M requests
 and ~2.3 CPU-hours - over the invocation limit and 58% of the CPU allowance,
 for a draft nobody is even running.
 
-So `src/app/page.tsx` gates polling: nothing at all while `document.hidden`,
-2s only while a draft is `active`, 10s in the lobby or once complete, plus an
-immediate refresh on `visibilitychange` so returning to the tab feels instant.
-Verified in a browser: 0 requests in 12s hidden, 7 in 12s visible. Cloudflare Workers is a viable
+So `src/app/page.tsx` gates polling three ways:
+
+- **nothing at all** while `document.hidden`
+- **nothing at all** once the draft is `complete` - every roster is full, so
+  the state cannot change on its own
+- 2s while `active`, 10s in the lobby
+- immediate refresh on `visibilitychange`, so returning to a tab feels instant
+
+Verified in a browser: 0 requests in 12s hidden, 7 in 12s visible, and 0 in
+14s on a completed draft with the page visible.
+
+One consequence worth knowing: because a finished draft stops polling, if the
+commissioner hits Reset afterwards, other browsers will not notice until
+someone reloads. Cloudflare Workers is a viable
 alternative (100k req/day free, and `@opennextjs/cloudflare` supports Next
 16.3.3+) if you would rather not run two Vercel accounts.
 
