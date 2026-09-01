@@ -24,6 +24,16 @@ async function build(): Promise<DraftStore> {
     const { createRedisStore } = await import('./redisStore');
     return createRedisStore();
   }
+
+  // FileStore writes to disk and locks in-process - neither works on a
+  // serverless host. Fail with something actionable instead of a cryptic
+  // EROFS on the first person who tries to join.
+  if (process.env.VERCEL || process.env.NETLIFY || process.env.CF_PAGES) {
+    throw new Error(
+      'The file store cannot run on a serverless host. Set DRAFT_STORE=redis ' +
+      'plus UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.'
+    );
+  }
   return new FileStore();
 }
 
