@@ -157,9 +157,11 @@ so unlike some sources this needs no residential egress.
 
 1. Create the new Vercel account and a free Upstash Redis database.
 2. Push this repo to GitHub, import it into the new Vercel account.
-3. Set environment variables:
-   `ESPN_LEAGUE_ID`, `ESPN_SEASON`, `DRAFT_STORE=redis`,
-   `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
+3. Set environment variables: `ESPN_LEAGUE_ID`, `ESPN_SEASON`,
+   `DRAFT_STORE=redis`, and the Upstash REST credentials. Both namings are
+   accepted - `UPSTASH_REDIS_REST_URL`/`_TOKEN` from an upstash.com signup, or
+   `KV_REST_API_URL`/`_TOKEN` from the Vercel Marketplace integration - so it
+   works whichever way Upstash was added.
 4. Deploy. Free `*.vercel.app` domain.
 
 ### Measured cost

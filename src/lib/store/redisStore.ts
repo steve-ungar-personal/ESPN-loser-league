@@ -118,15 +118,42 @@ export class RedisStore implements DraftStore {
   }
 }
 
+/**
+ * Credential env vars, in priority order. The names differ depending on how
+ * Upstash was set up: signing up at upstash.com gives UPSTASH_*, while the
+ * Vercel Marketplace integration has historically injected KV_REST_API_*.
+ * Accept either rather than making the deploy depend on which one you got.
+ */
+const CREDENTIAL_PAIRS: [urlVar: string, tokenVar: string][] = [
+  ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'],
+  ['KV_REST_API_URL', 'KV_REST_API_TOKEN'],
+  ['REDIS_REST_URL', 'REDIS_REST_TOKEN'],
+];
+
+export function resolveRedisCredentials(
+  env: Record<string, string | undefined> = process.env
+): { url: string; token: string; source: string } | null {
+  for (const [urlVar, tokenVar] of CREDENTIAL_PAIRS) {
+    const url = env[urlVar];
+    const token = env[tokenVar];
+    if (url && token) return { url, token, source: urlVar };
+  }
+  return null;
+}
+
 /** Builds the store from env. Imported lazily so local dev never needs the dep. */
 export async function createRedisStore(): Promise<RedisStore> {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) {
+  const creds = resolveRedisCredentials();
+  if (!creds) {
+    const names = CREDENTIAL_PAIRS.map(([u, t]) => `${u} + ${t}`).join(', or ');
+    throw new Error(`DRAFT_STORE=redis needs one of these credential pairs: ${names}`);
+  }
+  // The REST URL is https://; a redis:// connection string will not work here.
+  if (!/^https?:\/\//i.test(creds.url)) {
     throw new Error(
-      'DRAFT_STORE=redis needs UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN'
+      `${creds.source} must be the Upstash REST URL (https://...), not a redis:// connection string.`
     );
   }
   const { Redis } = await import('@upstash/redis');
-  return new RedisStore(new Redis({ url, token }) as unknown as RedisLike);
+  return new RedisStore(new Redis({ url: creds.url, token: creds.token }) as unknown as RedisLike);
 }

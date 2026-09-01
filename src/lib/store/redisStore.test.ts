@@ -4,7 +4,9 @@
  *
  * Run with: npm run test:redis
  */
-import { RedisStore, ConcurrencyError, type RedisLike } from './redisStore';
+import {
+  RedisStore, ConcurrencyError, resolveRedisCredentials, type RedisLike,
+} from './redisStore';
 import { emptyRoom, type Room, type Drafter } from '../types';
 import { applyPick, DraftError } from '../draft';
 import type { Player } from '../types';
@@ -223,6 +225,29 @@ const run = async () => {
     try { await store.update((r) => { r.pickSeconds = 31; }); }
     catch (e) { threw = e; }
     ok('throws ConcurrencyError after max attempts', threw instanceof ConcurrencyError);
+  }
+
+  console.log('\ncredential resolution');
+  {
+    eq('picks up the upstash.com names',
+      resolveRedisCredentials({
+        UPSTASH_REDIS_REST_URL: 'https://a.upstash.io', UPSTASH_REDIS_REST_TOKEN: 't',
+      })?.source, 'UPSTASH_REDIS_REST_URL');
+
+    eq('picks up the Vercel Marketplace KV names',
+      resolveRedisCredentials({
+        KV_REST_API_URL: 'https://b.upstash.io', KV_REST_API_TOKEN: 't',
+      })?.source, 'KV_REST_API_URL');
+
+    eq('prefers UPSTASH_* when both are present',
+      resolveRedisCredentials({
+        UPSTASH_REDIS_REST_URL: 'https://a.upstash.io', UPSTASH_REDIS_REST_TOKEN: 't',
+        KV_REST_API_URL: 'https://b.upstash.io', KV_REST_API_TOKEN: 't',
+      })?.source, 'UPSTASH_REDIS_REST_URL');
+
+    eq('nothing set resolves to null', resolveRedisCredentials({}), null);
+    eq('a url with no token is not enough',
+      resolveRedisCredentials({ UPSTASH_REDIS_REST_URL: 'https://a.upstash.io' }), null);
   }
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
