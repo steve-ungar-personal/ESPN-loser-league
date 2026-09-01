@@ -1,0 +1,27 @@
+{
+  "name": "juan-pena-loser-league",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3737",
+    "build": "next build",
+    "start": "next start -p 3737",
+    "lint": "next lint",
+    "test": "tsc src/lib/draft.test.ts --outDir .testbuild --module commonjs --target es2022 --moduleResolution node --skipLibCheck --esModuleInterop && node .testbuild/draft.test.js",
+    "typecheck": "tsc --noEmit",
+    "test:redis": "tsc src/lib/store/redisStore.test.ts --outDir .testbuild --module commonjs --target es2022 --moduleResolution node --skipLibCheck --esModuleInterop && node .testbuild/store/redisStore.test.js",
+    "test:all": "npm run test && npm run test:redis"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.38.3",
+    "next": "^16.3.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.7",
+    "@types/react": "19.0.7",
+    "@types/react-dom": "19.0.3",
+    "typescript": "5.7.3"
+  }
+}

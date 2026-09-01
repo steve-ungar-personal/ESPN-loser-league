@@ -1,0 +1,286 @@
+:root {
+  --bg: #0f1216;
+  --panel: #171b21;
+  --panel-2: #1e242c;
+  --line: #2a323d;
+  --text: #e6eaf0;
+  --muted: #8d99a8;
+  --dim: #5b6674;
+  --accent: #4ea1ff;
+  --accent-dim: #1d4b7d;
+  --good: #43c07a;
+  --warn: #e0a83c;
+  --bad: #e05c5c;
+  --qb: #d977c8; --rb: #63c98a; --wr: #58a6ff; --te: #e0a049; --k: #9aa4b1;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap {
+  max-width: 1500px; margin: 0 auto;
+  padding: 14px max(12px, env(safe-area-inset-left)) 40px;
+}
+
+h1 { font-size: 19px; margin: 0; letter-spacing: -0.2px; }
+h2 { font-size: 13px; margin: 0 0 10px; color: var(--muted); font-weight: 600;
+     text-transform: uppercase; letter-spacing: 0.6px; }
+
+.panel { background: var(--panel); border: 1px solid var(--line);
+         border-radius: 10px; padding: 13px; }
+
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.spread { display: flex; justify-content: space-between; align-items: center;
+          gap: 12px; flex-wrap: wrap; }
+/* min-width:0 stops the wide stats table from forcing the whole page wider
+   than the viewport - grid and flex children default to min-width:auto. */
+.stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.grow { flex: 1; }
+
+input.search { flex: 1 1 200px; min-width: 0; }
+
+button {
+  font: inherit; color: var(--text); background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: 7px;
+  padding: 7px 13px; cursor: pointer; touch-action: manipulation;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button.primary { background: var(--accent); border-color: var(--accent);
+                 color: #06121f; font-weight: 650; }
+button.primary:hover:not(:disabled) { filter: brightness(1.1); }
+button.danger { border-color: #5c2b2b; color: #e69090; }
+button.sm { padding: 5px 11px; font-size: 12px; border-radius: 6px; }
+
+input, select {
+  font: 16px/1.4 inherit; font-family: inherit; /* 16px stops iOS zoom-on-focus */
+  color: var(--text); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px;
+  max-width: 100%;
+}
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+label.field { display: flex; flex-direction: column; gap: 5px;
+              font-size: 12px; color: var(--muted); }
+
+.err { color: #ffb4b4; background: #341c1c; border: 1px solid #5c2b2b;
+       padding: 8px 11px; border-radius: 7px; font-size: 13px; }
+.note { color: var(--muted); font-size: 12.5px; }
+
+.pos { display: inline-block; min-width: 30px; text-align: center;
+       font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+       background: var(--panel-2); }
+.pos.QB { color: var(--qb); } .pos.RB { color: var(--rb); }
+.pos.WR { color: var(--wr); } .pos.TE { color: var(--te); } .pos.K  { color: var(--k); }
+
+/* ---------- table ---------- */
+
+.tablewrap {
+  overflow-x: auto; overflow-y: auto;
+  border: 1px solid var(--line); border-radius: 10px;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%; min-width: 0;
+}
+table { border-collapse: separate; border-spacing: 0; width: 100%;
+        font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; white-space: nowrap;
+         border-bottom: 1px solid var(--line); }
+th.l, td.l { text-align: left; }
+
+thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--panel-2);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--muted); cursor: pointer; user-select: none;
+}
+thead th:hover { color: var(--text); }
+
+/* Draft button pinned left so it stays reachable when the stats scroll away. */
+td.act, th.act {
+  position: sticky; left: 0; z-index: 1;
+  background: var(--panel); padding: 5px 8px;
+  border-right: 1px solid var(--line);
+}
+thead th.act { z-index: 3; background: var(--panel-2); cursor: default; }
+tbody tr:hover td.act { background: #1a2029; }
+tbody tr.blocked td.act { background: var(--panel); }
+
+tbody tr:hover { background: #1a2029; }
+tbody tr.blocked { opacity: 0.34; }
+tbody tr.blocked td { color: var(--dim); }
+td.name { font-weight: 600; }
+
+.inj { font-size: 10.5px; font-weight: 700; margin-left: 6px; }
+.inj.OUT, .inj.INJURY_RESERVE, .inj.SUSPENSION { color: var(--bad); }
+.inj.QUESTIONABLE, .inj.DOUBTFUL, .inj.DAY_TO_DAY { color: var(--warn); }
+
+/* ---------- top bar: title left, clock right ---------- */
+
+.topbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { flex: 1 1 240px; min-width: 0; }
+
+.clockbox {
+  display: flex; align-items: center; gap: 14px;
+  padding: 7px 13px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--panel);
+}
+.clockbox.turn { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-dim);
+                 background: #16212e; }
+.clockmeta { display: flex; flex-direction: column; gap: 1px; }
+.onclockname { font-size: 15px; white-space: nowrap; }
+
+.donebox { display: flex; flex-direction: column; gap: 7px; }
+.exports { gap: 7px; }
+a.dl {
+  display: inline-block; font-size: 12px; font-weight: 600;
+  text-decoration: none; color: var(--text);
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 6px; padding: 5px 11px;
+}
+a.dl:hover { border-color: var(--accent); color: var(--accent); }
+
+.clock { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums;
+         min-width: 62px; text-align: right; }
+.clock.low { color: var(--bad); }
+.turn { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-dim); }
+
+@media (max-width: 640px) {
+  .topbar { gap: 9px; }
+  .brand { flex: 1 1 100%; }
+  .clockbox { flex: 1 1 100%; justify-content: space-between; padding: 6px 11px; }
+  .adminrow { flex: 1 1 100%; }
+}
+
+/* ---------- roster ---------- */
+
+.slotgrid { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 7px 7px;
+            align-items: center; }
+.slotlabel { font-size: 11px; font-weight: 700; color: var(--muted); }
+/* min-width:0 lets the ellipsis work inside a grid track. */
+.slotval { font-size: 13px; min-width: 0;
+           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.slotval.empty { color: var(--dim); font-style: italic; }
+.slotval .note { margin-left: 3px; }
+
+/* ---------- all teams: one compact row each, scales to 12 ---------- */
+
+ul.teams { list-style: none; margin: 0; padding: 0;
+           display: flex; flex-direction: column; gap: 3px; }
+
+li.team {
+  display: flex; align-items: center; gap: 7px;
+  padding: 3px 5px; border-radius: 6px;
+  border-left: 3px solid transparent;
+}
+li.team.onclock {
+  border-left-color: var(--accent);
+  background: #16212e;
+}
+
+.tslot {
+  flex: none; width: 17px; text-align: right;
+  font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums;
+}
+.tname {
+  flex: 1 1 auto; min-width: 0;
+  font-size: 12.5px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tname.me { color: var(--accent); }
+
+.strip { flex: none; display: flex; gap: 2px; }
+.box {
+  width: 25px; height: 16px; border-radius: 3px;
+  font-size: 9px; font-weight: 700; line-height: 16px; text-align: center;
+}
+
+/* Still-open slots are the useful signal - what each team STILL NEEDS - so
+   they get the contrast. Filled slots fade back once they stop mattering. */
+.box.open {
+  background: var(--panel-2); border: 1px solid var(--muted);
+  color: var(--text); line-height: 14px;
+}
+
+/* Faded, but keep the hue so you can still read WHAT filled the slot. */
+.box.QB, .box.RB, .box.WR, .box.TE, .box.K {
+  background: transparent; border: 1px dashed var(--line);
+  font-weight: 600; line-height: 14px; opacity: 0.5;
+}
+.box.QB { color: var(--qb); }
+.box.RB { color: var(--rb); }
+.box.WR { color: var(--wr); }
+.box.TE { color: var(--te); }
+.box.K  { color: var(--k); }
+
+.tcount {
+  flex: none; width: 26px; text-align: right;
+  font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+.tcount.done { color: var(--good); }
+
+.legend { margin: 9px 0 0; font-size: 11px; }
+
+/* ---------- recent picks: 5 rows then scroll ---------- */
+
+ul.picks { list-style: none; margin: 0; padding: 0; }
+ul.picks.scroll5 { max-height: 152px; overflow-y: auto; }
+ul.picks li { display: flex; justify-content: space-between; gap: 8px;
+              padding: 5px 2px; border-bottom: 1px solid var(--line);
+              font-size: 12.5px; }
+ul.picks li:last-child { border-bottom: none; }
+.pickno { color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* ---------- filter tabs ---------- */
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button.on { background: var(--accent); border-color: var(--accent);
+                  color: #06121f; font-weight: 650; }
+
+label.checkbox {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--muted);
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+label.checkbox input[type="checkbox"] {
+  width: 16px; height: 16px; margin: 0; padding: 0;
+  accent-color: var(--accent); cursor: pointer;
+}
+label.checkbox:hover { color: var(--text); }
+
+/* ---------- layout ---------- */
+
+/* Roster needs ~275px to fit "Xavier Hutchinson HOU" unwrapped; strip needs ~300px.
+   minmax(0,1fr) + min-width:0 keep the table column from blowing out the page. */
+.board { display: grid; grid-template-columns: 610px minmax(0, 1fr);
+         gap: 14px; align-items: start; }
+.board > * { min-width: 0; }
+.sidecols { display: grid; grid-template-columns: 275px minmax(0, 1fr);
+            gap: 12px; align-items: start; }
+.sidecols > * { min-width: 0; }
+
+@media (max-width: 1340px) {
+  .board { grid-template-columns: 1fr; }
+}
+
+/* Below the stacking breakpoint the panels share the full width instead. */
+@media (max-width: 1340px) {
+  .sidecols { grid-template-columns: 260px minmax(0, 1fr); }
+}
+
+/* Phone: everything stacks, panels sit side by side only if there's room. */
+@media (max-width: 640px) {
+  .wrap { padding: 10px 10px 32px; }
+  h1 { font-size: 17px; }
+  .sidecols { grid-template-columns: 1fr; }
+  .clock { font-size: 22px; }
+  th, td { padding: 8px 9px; }
+  .tabs button.sm { padding: 7px 12px; }  /* bigger touch targets */
+  ul.picks.scroll5 { max-height: 160px; }
+}
