@@ -138,6 +138,23 @@ export function resolveRedisCredentials(
     const token = env[tokenVar];
     if (url && token) return { url, token, source: urlVar };
   }
+
+  // Fallback: the Vercel Marketplace lets you choose ANY prefix, so the names
+  // could be STORAGE_REST_API_URL, FOO_REST_URL, anything. Find a var whose
+  // name ends in a REST url suffix and whose partner token exists.
+  // Sorted for determinism when a project somehow has more than one.
+  for (const key of Object.keys(env).sort()) {
+    const suffix = ['_REST_API_URL', '_REST_URL'].find((s) => key.endsWith(s));
+    if (!suffix) continue;
+
+    const url = env[key];
+    if (!url || !/^https?:\/\//i.test(url)) continue;
+
+    // Same prefix, TOKEN instead of URL. Never the read-only token.
+    const tokenKey = key.slice(0, -3) + 'TOKEN';
+    const token = env[tokenKey];
+    if (token) return { url, token, source: key };
+  }
   return null;
 }
 

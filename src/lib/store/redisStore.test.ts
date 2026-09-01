@@ -248,6 +248,38 @@ const run = async () => {
     eq('nothing set resolves to null', resolveRedisCredentials({}), null);
     eq('a url with no token is not enough',
       resolveRedisCredentials({ UPSTASH_REDIS_REST_URL: 'https://a.upstash.io' }), null);
+
+    // The Vercel Marketplace lets you pick any prefix, so discovery must not
+    // depend on knowing the name up front.
+    eq('discovers an arbitrary custom prefix',
+      resolveRedisCredentials({
+        STORAGE_REST_API_URL: 'https://c.upstash.io', STORAGE_REST_API_TOKEN: 't',
+      })?.source, 'STORAGE_REST_API_URL');
+
+    eq('discovers a shorter _REST_URL variant',
+      resolveRedisCredentials({
+        LOSER_REST_URL: 'https://d.upstash.io', LOSER_REST_TOKEN: 't',
+      })?.source, 'LOSER_REST_URL');
+
+    // A redis:// connection string sits alongside the REST pair; ignore it.
+    eq('ignores the redis:// connection string var',
+      resolveRedisCredentials({
+        STORAGE_URL: 'redis://default:pw@c.upstash.io:6379',
+        STORAGE_REST_API_URL: 'https://c.upstash.io',
+        STORAGE_REST_API_TOKEN: 't',
+      })?.source, 'STORAGE_REST_API_URL');
+
+    eq('does not settle for only a read-only token',
+      resolveRedisCredentials({
+        STORAGE_REST_API_URL: 'https://c.upstash.io',
+        STORAGE_REST_API_READ_ONLY_TOKEN: 'ro',
+      }), null);
+
+    eq('explicit names still win over discovery',
+      resolveRedisCredentials({
+        STORAGE_REST_API_URL: 'https://c.upstash.io', STORAGE_REST_API_TOKEN: 't',
+        UPSTASH_REDIS_REST_URL: 'https://a.upstash.io', UPSTASH_REDIS_REST_TOKEN: 't',
+      })?.source, 'UPSTASH_REDIS_REST_URL');
   }
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
