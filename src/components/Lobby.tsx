@@ -4,13 +4,16 @@ import type { PublicRoom } from '@/lib/types';
 import { ROSTER_SIZE, MIN_PICK_SECONDS, MAX_PICK_SECONDS } from '@/lib/roster';
 
 export default function Lobby({
-  room, meId, onStart, busy, error,
+  room, meId, onStart, busy, error, poolCount, poolBusy, onRefreshPool,
 }: {
   room: PublicRoom;
   meId: string | null;
   onStart: (pickSeconds: number) => void;
   busy: boolean;
   error: string | null;
+  poolCount: number;
+  poolBusy: boolean;
+  onRefreshPool: () => void;
 }) {
   const [secs, setSecs] = useState(room.pickSeconds);
   const isCommish = meId !== null && room.commissionerId === meId;
@@ -36,6 +39,19 @@ export default function Lobby({
           </li>
         ))}
       </ul>
+
+      <div className="spread poolrow">
+        <span className="note">
+          {poolCount.toLocaleString()} undrafted players loaded
+        </span>
+        <button className="sm" disabled={poolBusy} onClick={onRefreshPool}>
+          {poolBusy ? 'Refreshing…' : 'Refresh pool'}
+        </button>
+      </div>
+      <p className="note" style={{ margin: 0 }}>
+        The pool refreshes on its own every few minutes, so players taken in the
+        real ESPN draft drop off before you start.
+      </p>
 
       {error && <div className="err">{error}</div>}
 

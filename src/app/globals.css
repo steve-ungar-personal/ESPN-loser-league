@@ -364,3 +364,5 @@ label.msort { display: none; }
 .clock.starting { color: var(--accent); }
 .clockbox.startingbox { border-color: var(--accent);
                         box-shadow: 0 0 0 1px var(--accent-dim); }
+
+.poolrow { gap: 10px; }

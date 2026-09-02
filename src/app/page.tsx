@@ -13,6 +13,8 @@ const IDENTITY_KEY = 'jpll-identity-v1';
 const POLL_MS = 2000;
 /** Lobby and finished drafts do not need a 2s heartbeat. */
 const IDLE_POLL_MS = 10000;
+/** How often the lobby re-pulls the ESPN pool while waiting to start. */
+const POOL_REFRESH_MS = 5 * 60 * 1000;
 
 type Identity = { token: string; id: string; name: string; slot: number };
 
@@ -34,6 +36,7 @@ export default function Page() {
   const [busy, setBusy] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
+  const [poolBusy, setPoolBusy] = useState(false);
 
   // Server clock minus browser clock, so the countdown can't be gamed or drift.
   const skew = useRef(0);
@@ -43,16 +46,25 @@ export default function Page() {
     setReady(true);
   }, []);
 
-  // Player pool: fetched once, it barely changes before the ESPN draft.
-  useEffect(() => {
-    fetch('/api/players')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) setError(d.error);
-        else setPlayers(d.players ?? []);
-      })
-      .catch((e) => setError(String(e)));
+  const loadPlayers = useCallback(async (force = false) => {
+    setPoolBusy(true);
+    try {
+      const res = await fetch('/api/players' + (force ? '?refresh=1' : ''), {
+        cache: 'no-store',
+      });
+      const d = await res.json();
+      if (d.error) setError(d.error);
+      else setPlayers(d.players ?? []);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setPoolBusy(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadPlayers();
+  }, [loadPlayers]);
 
   const refresh = useCallback(async () => {
     try {
@@ -74,6 +86,17 @@ export default function Page() {
   // once it is done, and not at all while the tab is hidden. A forgotten open
   // tab polling every 2s costs far more over a month than the draft itself.
   const roomStatus = room?.status ?? 'lobby';
+
+  // The ESPN draft may finish while people sit in the lobby. Re-pull the pool
+  // periodically so the board is current by the time anyone hits Start -
+  // otherwise a tab opened beforehand would draft against a stale list.
+  useEffect(() => {
+    if (roomStatus !== 'lobby') return;
+    const t = setInterval(() => {
+      if (!document.hidden) loadPlayers();
+    }, POOL_REFRESH_MS);
+    return () => clearInterval(t);
+  }, [roomStatus, loadPlayers]);
   useEffect(() => {
     // Every roster is full - the state can no longer change on its own, so
     // stop entirely rather than heartbeating at a finished draft forever.
@@ -268,7 +291,16 @@ export default function Page() {
   if (room.status === 'lobby') {
     return (
       <div className="wrap">
-        <Lobby room={room} meId={identity.id} onStart={start} busy={busy} error={error} />
+        <Lobby
+          room={room}
+          meId={identity.id}
+          onStart={start}
+          busy={busy}
+          error={error}
+          poolCount={players.length}
+          poolBusy={poolBusy}
+          onRefreshPool={() => loadPlayers(true)}
+        />
         <p className="note" style={{ textAlign: 'center' }}>
           <button className="sm" onClick={leave}>Leave / change name</button>
         </p>
