@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Football">
+  <!-- Favicons render at 16px, so this is deliberately bold and low-detail:
+       a tilted ball, light end caps, and laces thick enough to survive. -->
+  <rect width="64" height="64" rx="14" fill="#0f1216"/>
+  <g transform="rotate(-42 32 32)">
+    <ellipse cx="32" cy="32" rx="24" ry="14" fill="#8a4a22"/>
+    <ellipse cx="32" cy="32" rx="24" ry="14" fill="none" stroke="#5d2f13" stroke-width="2.5"/>
+    <!-- end caps -->
+    <path d="M13 25.5a24 14 0 0 0 0 13" fill="none" stroke="#f2ece4" stroke-width="3"
+          stroke-linecap="round"/>
+    <path d="M51 25.5a24 14 0 0 1 0 13" fill="none" stroke="#f2ece4" stroke-width="3"
+          stroke-linecap="round"/>
+    <!-- laces -->
+    <line x1="22" y1="32" x2="42" y2="32" stroke="#f2ece4" stroke-width="3.5"
+          stroke-linecap="round"/>
+    <g stroke="#f2ece4" stroke-width="3" stroke-linecap="round">
+      <line x1="26" y1="27.5" x2="26" y2="36.5"/>
+      <line x1="32" y1="27.5" x2="32" y2="36.5"/>
+      <line x1="38" y1="27.5" x2="38" y2="36.5"/>
+    </g>
+  </g>
+</svg>
