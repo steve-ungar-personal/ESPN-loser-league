@@ -123,6 +123,25 @@ export default function PlayerTable({
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
+
+        <label className="msort">
+          Sort
+          <select
+            value={sort}
+            onChange={(e) => {
+              const key = e.target.value as SortKey;
+              setSort(key);
+              setAsc(ASC_BY_DEFAULT.has(key));
+            }}
+          >
+            {COLS.map((c) => (
+              <option key={c.key} value={c.key}>{c.title ?? c.label}</option>
+            ))}
+          </select>
+          <button className="sm" onClick={() => setAsc(!asc)} title="Reverse order">
+            {asc ? '↑' : '↓'}
+          </button>
+        </label>
       </div>
 
       <p className="note" style={{ margin: 0 }}>
@@ -180,6 +199,11 @@ export default function PlayerTable({
                         {p.injuryStatus!.replace(/_/g, ' ')}
                       </span>
                     )}
+                    {/* Phones hide the numeric columns; surface the key ones here. */}
+                    <span className="mstats">
+                      #{p.espnRank ?? '—'} · {p.proTeam} · bye {p.bye ?? '—'}
+                      {' · '}ADP {fmt(p.adp)} · proj {fmt(p.proj2026)}
+                    </span>
                   </td>
                   <td className="l">{p.proTeam}</td>
                   <td>{p.bye ?? '—'}</td>

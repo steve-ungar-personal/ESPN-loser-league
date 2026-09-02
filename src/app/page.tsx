@@ -350,7 +350,7 @@ export default function Page() {
       )}
 
       <div className="board">
-        <div className="stack">
+        <div className="stack sidebar">
           <div className="sidecols">
             <RosterPanel title="Your roster" picks={myPicks} byId={byId} counts={myCounts} />
             <TeamsPanel
