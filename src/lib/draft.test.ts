@@ -194,7 +194,7 @@ console.log('\nopening grace period');
   room.startsAt = Date.now() + START_DELAY_SECONDS * 1000;
   room.deadline = room.startsAt + room.pickSeconds * 1000;
 
-  eq('grace is 15 seconds', START_DELAY_SECONDS, 15);
+  eq('grace is 30 seconds', START_DELAY_SECONDS, 30);
 
   throws(
     'the first drafter cannot pick during the grace period',

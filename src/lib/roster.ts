@@ -67,4 +67,4 @@ export const MIN_PICK_SECONDS = 5;
 export const MAX_PICK_SECONDS = 600;
 
 /** Seconds between hitting Start and the first pick clock running. */
-export const START_DELAY_SECONDS = 15;
+export const START_DELAY_SECONDS = 30;
