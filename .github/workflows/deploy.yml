@@ -1,0 +1,53 @@
+name: Deploy to Vercel
+
+# Push-to-deploy WITHOUT connecting GitHub to Vercel. Vercel only ever sees a
+# deploy token, so the GitHub account stays linked to whatever other Vercel
+# account it is already linked to.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # lets you deploy by hand from the Actions tab
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false # never cancel a half-finished deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Gate the deploy on the test suite: a red build should never ship.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Draft rule tests
+        run: npm test
+
+      - name: Store concurrency tests
+        run: npm run test:redis
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

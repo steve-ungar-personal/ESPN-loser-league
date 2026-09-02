@@ -64,6 +64,19 @@ cookies or tokens are involved.
 D/ST is dropped — there's no roster slot for it. The pool is cached 15 minutes;
 on an ESPN error the last good pool is served rather than breaking a live draft.
 
+### Changing the source league
+
+Three steps - the env var alone is not enough:
+
+1. Change `ESPN_LEAGUE_ID` (Vercel: Settings -> Environment Variables -> Production).
+2. **Redeploy.** Running functions keep the old value until a new deployment.
+3. **Reset the draft room.** Picks store player ids from the old league's pool;
+   against a different league those ids may not resolve, so picks render
+   without names and roster counts go wrong.
+
+Before trusting a new league, check it has a real QB slot (slot 0, not TQB
+slot 1), a K slot, and enough free agents per position for your draft size.
+
 ### Source leagues (all public, no auth)
 
 ```
@@ -118,6 +131,28 @@ Two subtleties it handles, both caught by tests:
   object from a losing attempt.
 
 After `MAX_ATTEMPTS` it throws `ConcurrencyError` rather than spinning.
+
+## Push-to-deploy (without linking GitHub to Vercel)
+
+Vercel allows only ONE Vercel account per GitHub account, and connecting a
+second one silently unlinks the first - breaking its deployments. So this repo
+deploys through a GitHub Action instead: Vercel only ever sees a deploy token
+and never learns the GitHub account exists.
+
+`.github/workflows/deploy.yml` runs typecheck + both test suites, then deploys.
+A red build never ships.
+
+Add three repository secrets (Settings -> Secrets and variables -> Actions):
+
+| Secret | Where it comes from |
+|---|---|
+| `VERCEL_TOKEN` | vercel.com -> Account Settings -> Tokens -> Create |
+| `VERCEL_ORG_ID` | `.vercel/project.json` -> `orgId` |
+| `VERCEL_PROJECT_ID` | `.vercel/project.json` -> `projectId` |
+
+`.vercel/` is gitignored, so read those two ids locally rather than expecting
+them in the repo. After that, `git push` to `main` deploys to production, and
+the Actions tab has a manual "Run workflow" button.
 
 ## Getting the data out
 
