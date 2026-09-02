@@ -5,6 +5,7 @@ const LEAGUE_ID = process.env.ESPN_LEAGUE_ID ?? '1005162176';
 const HOST = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl';
 
 const LEAGUE_URL = `${HOST}/seasons/${SEASON}/segments/0/leagues/${LEAGUE_ID}`;
+const SETTINGS_URL = `${LEAGUE_URL}?view=mSettings`;
 const TEAMS_URL = `${HOST}/seasons/${SEASON}?view=proTeamSchedules_wl`;
 
 /** ESPN defaultPositionId -> our position. Anything else (D/ST etc) is dropped. */
@@ -18,6 +19,32 @@ const POOL_LIMIT = 1200;
 const CACHE_MS = 15 * 60 * 1000;
 
 type TeamInfo = { abbrev: string; bye: number | null };
+
+/** ESPN publishes several rank sets; using the wrong one mis-sorts the board. */
+type RankType = 'PPR' | 'STANDARD';
+let rankCache: { at: number; value: RankType } | null = null;
+
+/**
+ * Rank the board the way the source league actually scores. A PPR board in a
+ * standard league (or vice versa) silently orders players wrong, and rank is
+ * the default sort, so it matters more than it looks.
+ */
+async function fetchRankType(): Promise<RankType> {
+  if (rankCache && Date.now() - rankCache.at < CACHE_MS) return rankCache.value;
+  let value: RankType = 'PPR';
+  try {
+    const res = await fetch(SETTINGS_URL, { cache: 'no-store' });
+    if (res.ok) {
+      const j = await res.json();
+      const t = j?.settings?.scoringSettings?.playerRankType;
+      if (t === 'STANDARD' || t === 'PPR') value = t;
+    }
+  } catch {
+    // Fall back to PPR rather than failing the whole pool fetch.
+  }
+  rankCache = { at: Date.now(), value };
+  return value;
+}
 
 let teamCache: { at: number; data: Map<number, TeamInfo> } | null = null;
 let poolCache: { at: number; data: Player[] } | null = null;
@@ -61,14 +88,14 @@ function num(v: unknown): number | null {
 }
 
 async function fetchPool(): Promise<Player[]> {
-  const teams = await fetchProTeams();
+  const [teams, rankType] = await Promise.all([fetchProTeams(), fetchRankType()]);
 
   const filter = {
     players: {
       filterStatus: { value: ['FREEAGENT', 'WAIVERS'] },
       limit: POOL_LIMIT,
       offset: 0,
-      sortDraftRanks: { sortPriority: 100, sortAsc: true, value: 'PPR' },
+      sortDraftRanks: { sortPriority: 100, sortAsc: true, value: rankType },
     },
   };
 
@@ -89,7 +116,9 @@ async function fetchPool(): Promise<Player[]> {
 
     const team = teams.get(p.proTeamId);
     const own = p.ownership ?? {};
-    const rank = p.draftRanksByRankType?.PPR?.rank;
+    // Same rank set we sorted by, so the number matches the ordering.
+    const rank = p.draftRanksByRankType?.[rankType]?.rank
+      ?? p.draftRanksByRankType?.PPR?.rank;
 
     out.push({
       id: p.id,
@@ -135,6 +164,10 @@ export async function getPlayers(force = false): Promise<Player[]> {
     if (poolCache) return poolCache.data;
     throw err;
   }
+}
+
+export async function getRankType(): Promise<RankType> {
+  return fetchRankType();
 }
 
 export const espnConfig = { season: SEASON, leagueId: LEAGUE_ID, poolLimit: POOL_LIMIT };
