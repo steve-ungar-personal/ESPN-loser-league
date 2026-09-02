@@ -257,16 +257,7 @@ export default function Page() {
 
         <div className={isMyTurn ? 'clockbox turn' : 'clockbox'}>
           {done ? (
-            <div className="donebox">
-              <strong>Draft complete — {room.picks.length} picks made.</strong>
-              <div className="row exports">
-                <a className="dl" href="/api/export?format=rosters">Rosters CSV</a>
-                <a className="dl" href="/api/export?format=picks">Picks CSV</a>
-                <a className="dl" href="/api/export?format=json" target="_blank" rel="noreferrer">
-                  JSON
-                </a>
-              </div>
-            </div>
+            <strong>Draft complete — {room.picks.length} picks made.</strong>
           ) : (
             <>
               <div className="clockmeta">
@@ -298,6 +289,27 @@ export default function Page() {
       </div>
 
       {error && <div className="err">{error}</div>}
+
+      {/* Everyone gets the downloads, not just the commissioner. */}
+      {done && (
+        <div className="panel donepanel">
+          <div>
+            <h2 style={{ margin: 0 }}>Draft results</h2>
+            <p className="note" style={{ margin: '4px 0 0' }}>
+              Saved on the server too — these links work any time, for everyone.
+            </p>
+          </div>
+          <div className="row exports">
+            <a className="dl primary-dl" href="/api/export?format=rosters">
+              ⬇ Rosters CSV
+            </a>
+            <a className="dl" href="/api/export?format=picks">⬇ Picks CSV</a>
+            <a className="dl" href="/api/export?format=json" target="_blank" rel="noreferrer">
+              View JSON
+            </a>
+          </div>
+        </div>
+      )}
 
       <div className="board">
         <div className="stack">

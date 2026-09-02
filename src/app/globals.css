@@ -136,8 +136,24 @@ td.name { font-weight: 600; }
 .clockmeta { display: flex; flex-direction: column; gap: 1px; }
 .onclockname { font-size: 15px; white-space: nowrap; }
 
-.donebox { display: flex; flex-direction: column; gap: 7px; }
-.exports { gap: 7px; }
+.donepanel {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 14px; flex-wrap: wrap;
+  border-color: var(--good);
+  box-shadow: 0 0 0 1px rgba(67, 192, 122, 0.25);
+}
+.exports { gap: 8px; }
+a.dl.primary-dl {
+  background: var(--accent); border-color: var(--accent);
+  color: #06121f; font-weight: 700;
+}
+a.dl.primary-dl:hover { filter: brightness(1.1); color: #06121f; }
+
+@media (max-width: 640px) {
+  .donepanel { flex-direction: column; align-items: stretch; }
+  .exports { justify-content: stretch; }
+  .exports a.dl { flex: 1 1 auto; text-align: center; padding: 9px 11px; }
+}
 a.dl {
   display: inline-block; font-size: 12px; font-weight: 600;
   text-decoration: none; color: var(--text);

@@ -1,12 +1,18 @@
 import { getStore } from '@/lib/store';
 import { toPublicRoom, drafterByToken, DraftError } from '@/lib/draft';
+import { MIN_PICK_SECONDS, MAX_PICK_SECONDS } from '@/lib/roster';
 import { json, fail, body } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const { token, pickSeconds } = await body<{ token?: string; pickSeconds?: number }>(req);
+    // pickSeconds arrives as a number normally, but an emptied number input
+    // sends '' - accept both so the check below can reject it properly.
+    const { token, pickSeconds } = await body<{
+      token?: string;
+      pickSeconds?: number | string;
+    }>(req);
     const store = await getStore();
 
     const { room } = await store.update((r) => {
@@ -20,8 +26,15 @@ export async function POST(req: Request) {
         throw new DraftError('Need at least 2 drafters to start.');
       }
 
-      const secs = Number(pickSeconds);
-      if (Number.isFinite(secs) && secs >= 15 && secs <= 600) {
+      // Reject an out-of-range timer rather than silently keeping the default -
+      // entering 5 and getting 1:30 with no explanation is worse than an error.
+      if (pickSeconds !== undefined && pickSeconds !== null && pickSeconds !== '') {
+        const secs = Number(pickSeconds);
+        if (!Number.isFinite(secs) || secs < MIN_PICK_SECONDS || secs > MAX_PICK_SECONDS) {
+          throw new DraftError(
+            `Seconds per pick must be between ${MIN_PICK_SECONDS} and ${MAX_PICK_SECONDS}.`
+          );
+        }
         r.pickSeconds = Math.round(secs);
       }
 

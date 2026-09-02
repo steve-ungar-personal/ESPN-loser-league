@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import type { PublicRoom } from '@/lib/types';
-import { ROSTER_SIZE } from '@/lib/roster';
+import { ROSTER_SIZE, MIN_PICK_SECONDS, MAX_PICK_SECONDS } from '@/lib/roster';
 
 export default function Lobby({
   room, meId, onStart, busy, error,
@@ -42,9 +42,9 @@ export default function Lobby({
       {isCommish ? (
         <>
           <label className="field">
-            Seconds per pick (autopick takes over when it hits zero)
+            Seconds per pick — {MIN_PICK_SECONDS}–{MAX_PICK_SECONDS} (autopick takes over at zero)
             <input
-              type="number" min={15} max={600} value={secs}
+              type="number" min={MIN_PICK_SECONDS} max={MAX_PICK_SECONDS} value={secs}
               onChange={(e) => setSecs(Number(e.target.value))}
             />
           </label>

@@ -58,3 +58,10 @@ export function rosterComplete(counts: SlotCounts): boolean {
     (k) => counts[k] >= SLOT_LIMITS[k]
   );
 }
+
+/**
+ * Pick-clock bounds. 5s is deliberately low - some groups want a rapid-fire
+ * draft - but below that the poll interval cannot keep up with the clock.
+ */
+export const MIN_PICK_SECONDS = 5;
+export const MAX_PICK_SECONDS = 600;
