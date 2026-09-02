@@ -38,6 +38,8 @@ export type RoomStatus = 'lobby' | 'active' | 'complete';
 
 export interface Room {
   status: RoomStatus;
+  /** Commissioner-held freeze. Status stays 'active'; the clock stops. */
+  paused: boolean;
   pickSeconds: number;
   deadline: number | null;
   commissionerId: string | null;
@@ -50,6 +52,7 @@ export interface Room {
 export function emptyRoom(): Room {
   return {
     status: 'lobby',
+    paused: false,
     pickSeconds: 90,
     deadline: null,
     commissionerId: null,

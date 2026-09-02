@@ -187,6 +187,40 @@ console.log('\nroster limits (1 QB / 2 RB / 3 TE-WR / 1 K)');
 
 // ---------- autopick ----------
 
+console.log('\npause');
+{
+  const room = mkRoom(3);
+
+  // Pausing is modelled the way the route does it: flag set, clock cleared.
+  room.paused = true;
+  room.deadline = null;
+
+  throws(
+    'nobody can draft while paused',
+    () => applyPick(room, 'd1', pickIdFor(room, 'RB'), byId, false),
+    /paused/i
+  );
+
+  eq('autopick never fires while paused',
+    runAutopickIfExpired(room, players, byId), null);
+
+  // Even with an expired deadline left behind, a paused room must not autopick.
+  room.deadline = Date.now() - 5000;
+  eq('an expired clock cannot autopick a paused draft',
+    runAutopickIfExpired(room, players, byId), null);
+  eq('no picks were made while paused', room.picks.length, 0);
+
+  // Unpausing restores a FULL clock, not whatever was left.
+  room.paused = false;
+  room.deadline = Date.now() + room.pickSeconds * 1000;
+  const remaining = Math.round((room.deadline - Date.now()) / 1000);
+  eq('unpause resets the clock to the maximum', remaining, room.pickSeconds);
+
+  const pick = applyPick(room, 'd1', pickIdFor(room, 'RB'), byId, false);
+  eq('drafting works again after unpause', pick.overall, 1);
+  eq('the clock still belonged to slot 1', pick.slot, 1);
+}
+
 console.log('\nautopick');
 {
   const room = mkRoom(3);

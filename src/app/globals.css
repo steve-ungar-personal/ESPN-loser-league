@@ -165,6 +165,9 @@ a.dl:hover { border-color: var(--accent); color: var(--accent); }
 .clock { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums;
          min-width: 62px; text-align: right; }
 .clock.low { color: var(--bad); }
+.clock.paused { color: var(--warn); font-size: 17px; letter-spacing: 1px; }
+.clockbox.pausedbox { border-color: var(--warn);
+                      box-shadow: 0 0 0 1px rgba(224, 168, 60, 0.3); }
 .turn { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-dim); }
 
 @media (max-width: 640px) {

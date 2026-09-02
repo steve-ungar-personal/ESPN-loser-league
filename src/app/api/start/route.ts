@@ -46,6 +46,7 @@ export async function POST(req: Request) {
       });
 
       r.status = 'active';
+      r.paused = false;
       r.startedAt = Date.now();
       r.deadline = Date.now() + r.pickSeconds * 1000;
       return null;

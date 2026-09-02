@@ -21,6 +21,7 @@ export async function POST(req: Request) {
 
       r.picks = [];
       r.status = 'lobby';
+      r.paused = false;
       r.deadline = null;
       r.startedAt = null;
       if (clearDrafters) {

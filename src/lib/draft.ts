@@ -32,6 +32,7 @@ export function toPublicRoom(room: Room): PublicRoom {
   const onClock = onClockDrafter(room);
   return {
     status: room.status,
+    paused: room.paused,
     pickSeconds: room.pickSeconds,
     deadline: room.deadline,
     commissionerId: room.commissionerId,
@@ -63,6 +64,9 @@ export function applyPick(
 ): Pick {
   if (room.status !== 'active') {
     throw new DraftError('Draft is not running.');
+  }
+  if (room.paused) {
+    throw new DraftError('The draft is paused.');
   }
 
   const n = room.drafters.length;
@@ -137,6 +141,8 @@ export function runAutopickIfExpired(
   byId: Map<number, Player>
 ): Pick | null {
   if (room.status !== 'active') return null;
+  // A paused draft must never auto-draft for the person on the clock.
+  if (room.paused) return null;
   if (room.deadline === null || Date.now() < room.deadline) return null;
 
   const drafter = onClockDrafter(room);

@@ -124,8 +124,10 @@ export default function Page() {
     [room, identity, byId]
   );
 
-  const isMyTurn =
+  const onTheClock =
     !!room && !!identity && room.status === 'active' && room.onClockDrafterId === identity.id;
+  // Paused means nobody can draft, including whoever holds the clock.
+  const isMyTurn = onTheClock && !room?.paused;
 
   const secondsLeft = useMemo(() => {
     void tick;
@@ -192,6 +194,19 @@ export default function Page() {
     }
   }
 
+  async function togglePause(next: boolean) {
+    if (!identity) return;
+    setBusy(true);
+    try {
+      const data = await post('/api/pause', { token: identity.token, paused: next });
+      setRoom(data.room);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function reset(clearDrafters: boolean) {
     if (!identity) return;
     const msg = clearDrafters
@@ -255,7 +270,7 @@ export default function Page() {
           </p>
         </div>
 
-        <div className={isMyTurn ? 'clockbox turn' : 'clockbox'}>
+        <div className={room.paused ? 'clockbox pausedbox' : isMyTurn ? 'clockbox turn' : 'clockbox'}>
           {done ? (
             <strong>Draft complete — {room.picks.length} picks made.</strong>
           ) : (
@@ -266,13 +281,27 @@ export default function Page() {
                   {room.drafters.length} · overall {room.picks.length + 1}/{room.totalPicks}
                 </div>
                 <strong className="onclockname">
-                  {isMyTurn ? 'You are on the clock' : `On the clock: ${onClock?.name ?? '—'}`}
+                  {room.paused
+                    ? `Paused — ${onClock?.name ?? '—'} is on the clock`
+                    : isMyTurn
+                      ? 'You are on the clock'
+                      : `On the clock: ${onClock?.name ?? '—'}`}
                 </strong>
               </div>
-              <div className={secondsLeft !== null && secondsLeft <= 10 ? 'clock low' : 'clock'}>
-                {secondsLeft === null
-                  ? '—'
-                  : `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`}
+              <div
+                className={
+                  room.paused
+                    ? 'clock paused'
+                    : secondsLeft !== null && secondsLeft <= 10
+                      ? 'clock low'
+                      : 'clock'
+                }
+              >
+                {room.paused
+                  ? 'PAUSED'
+                  : secondsLeft === null
+                    ? '—'
+                    : `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`}
               </div>
             </>
           )}
@@ -280,6 +309,15 @@ export default function Page() {
 
         {isCommish && (
           <div className="row adminrow">
+            {room.status === 'active' && (
+              <button
+                className={room.paused ? 'sm primary' : 'sm'}
+                disabled={busy}
+                onClick={() => togglePause(!room.paused)}
+              >
+                {room.paused ? '▶ Unpause' : '❚❚ Pause'}
+              </button>
+            )}
             {!done && (
               <button className="sm danger" onClick={() => reset(false)}>Reset picks</button>
             )}
