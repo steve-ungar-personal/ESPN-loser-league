@@ -124,19 +124,28 @@ export default function Page() {
     [room, identity, byId]
   );
 
-  const onTheClock =
-    !!room && !!identity && room.status === 'active' && room.onClockDrafterId === identity.id;
-  // Paused means nobody can draft, including whoever holds the clock.
-  const isMyTurn = onTheClock && !room?.paused;
-
   const secondsLeft = useMemo(() => {
     void tick;
     if (!room?.deadline) return null;
     return Math.max(0, Math.ceil((room.deadline - (Date.now() + skew.current)) / 1000));
   }, [room, tick]);
 
-  // Clock box colour: plain when it is not your pick, then green -> yellow ->
-  // red as your own clock runs down.
+  // Opening grace period: the draft is live but nobody is on a running clock
+  // yet, so every browser has time to catch up.
+  const startingIn = useMemo(() => {
+    void tick;
+    if (!room?.startsAt) return 0;
+    return Math.max(0, Math.ceil((room.startsAt - (Date.now() + skew.current)) / 1000));
+  }, [room, tick]);
+  const counting = startingIn > 0;
+
+  const onTheClock =
+    !!room && !!identity && room.status === 'active' && room.onClockDrafterId === identity.id;
+  // Nobody drafts while paused, or during the opening grace period.
+  const isMyTurn = onTheClock && !room?.paused && !counting;
+
+  // Clock box colour: plain when it is not your pick or the draft has not
+  // started ticking, then green -> yellow -> red as your own clock runs down.
   const urgency =
     !isMyTurn || secondsLeft === null
       ? ''
@@ -281,7 +290,7 @@ export default function Page() {
           </p>
         </div>
 
-        <div className={room.paused ? 'clockbox pausedbox' : urgency ? `clockbox ${urgency}` : 'clockbox'}>
+        <div className={room.paused ? 'clockbox pausedbox' : counting ? 'clockbox startingbox' : urgency ? `clockbox ${urgency}` : 'clockbox'}>
           {done ? (
             <strong>Draft complete — {room.picks.length} picks made.</strong>
           ) : (
@@ -294,15 +303,19 @@ export default function Page() {
                 <strong className="onclockname">
                   {room.paused
                     ? `Paused — ${onClock?.name ?? '—'} is on the clock`
-                    : isMyTurn
-                      ? 'You are on the clock'
-                      : `On the clock: ${onClock?.name ?? '—'}`}
+                    : counting
+                      ? `Get ready — ${onClock?.name ?? '—'} picks first`
+                      : isMyTurn
+                        ? 'You are on the clock'
+                        : `On the clock: ${onClock?.name ?? '—'}`}
                 </strong>
               </div>
               <div
                 className={
                   room.paused
                     ? 'clock paused'
+                    : counting
+                      ? 'clock starting'
                     : secondsLeft !== null && secondsLeft <= 10
                       ? 'clock low'
                       : 'clock'
@@ -310,7 +323,9 @@ export default function Page() {
               >
                 {room.paused
                   ? 'PAUSED'
-                  : secondsLeft === null
+                  : counting
+                    ? `0:${String(startingIn).padStart(2, '0')}`
+                    : secondsLeft === null
                     ? '—'
                     : `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`}
               </div>

@@ -23,6 +23,9 @@ export async function POST(req: Request) {
       }
 
       r.paused = paused;
+      // Unpausing hands out a fresh full clock, so any leftover opening grace
+      // is spent - otherwise it would block picks a second time.
+      if (!paused) r.startsAt = null;
       // Clearing the deadline is what actually stops the clock: autopick only
       // fires on an elapsed deadline, so a null deadline can never lapse.
       // Unpausing gives whoever is on the clock a full fresh timer.

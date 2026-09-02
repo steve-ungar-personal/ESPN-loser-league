@@ -4,7 +4,7 @@
  */
 import { emptyRoom, type Player, type Room, type Drafter } from './types';
 import { slotOnClock, totalPicks } from './snake';
-import { countRoster, hasRoomFor, ROSTER_SIZE } from './roster';
+import { countRoster, hasRoomFor, ROSTER_SIZE, START_DELAY_SECONDS } from './roster';
 import { applyPick, runAutopickIfExpired, onClockDrafter, DraftError } from './draft';
 
 let passed = 0;
@@ -186,6 +186,34 @@ console.log('\nroster limits (1 QB / 2 RB / 3 TE-WR / 1 K)');
 }
 
 // ---------- autopick ----------
+
+console.log('\nopening grace period');
+{
+  const room = mkRoom(3);
+  // Exactly what the start route does.
+  room.startsAt = Date.now() + START_DELAY_SECONDS * 1000;
+  room.deadline = room.startsAt + room.pickSeconds * 1000;
+
+  eq('grace is 10 seconds', START_DELAY_SECONDS, 10);
+
+  throws(
+    'the first drafter cannot pick during the grace period',
+    () => applyPick(room, 'd1', pickIdFor(room, 'RB'), byId, false),
+    /starts in \d+s/i
+  );
+
+  eq('autopick cannot fire during the grace period',
+    runAutopickIfExpired(room, players, byId), null);
+
+  ok('the first clock is a full pick length after the grace, not shortened',
+    room.deadline - room.startsAt === room.pickSeconds * 1000);
+
+  // Grace elapsed.
+  room.startsAt = Date.now() - 1;
+  const pick = applyPick(room, 'd1', pickIdFor(room, 'RB'), byId, false);
+  eq('drafting works once the grace has passed', pick.overall, 1);
+  eq('and it is still slot 1 on the clock', pick.slot, 1);
+}
 
 console.log('\npause');
 {

@@ -33,6 +33,7 @@ export function toPublicRoom(room: Room): PublicRoom {
   return {
     status: room.status,
     paused: room.paused,
+    startsAt: room.startsAt,
     pickSeconds: room.pickSeconds,
     deadline: room.deadline,
     commissionerId: room.commissionerId,
@@ -67,6 +68,10 @@ export function applyPick(
   }
   if (room.paused) {
     throw new DraftError('The draft is paused.');
+  }
+  if (room.startsAt !== null && Date.now() < room.startsAt) {
+    const secs = Math.ceil((room.startsAt - Date.now()) / 1000);
+    throw new DraftError(`The draft starts in ${secs}s.`);
   }
 
   const n = room.drafters.length;
@@ -143,6 +148,8 @@ export function runAutopickIfExpired(
   if (room.status !== 'active') return null;
   // A paused draft must never auto-draft for the person on the clock.
   if (room.paused) return null;
+  // Nor may the opening grace period be auto-drafted through.
+  if (room.startsAt !== null && Date.now() < room.startsAt) return null;
   if (room.deadline === null || Date.now() < room.deadline) return null;
 
   const drafter = onClockDrafter(room);

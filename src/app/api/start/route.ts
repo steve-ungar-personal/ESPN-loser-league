@@ -1,6 +1,6 @@
 import { getStore } from '@/lib/store';
 import { toPublicRoom, drafterByToken, DraftError } from '@/lib/draft';
-import { MIN_PICK_SECONDS, MAX_PICK_SECONDS } from '@/lib/roster';
+import { MIN_PICK_SECONDS, MAX_PICK_SECONDS, START_DELAY_SECONDS } from '@/lib/roster';
 import { json, fail, body } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -48,7 +48,10 @@ export async function POST(req: Request) {
       r.status = 'active';
       r.paused = false;
       r.startedAt = Date.now();
-      r.deadline = Date.now() + r.pickSeconds * 1000;
+      // Nobody is on a running clock until every browser has had a chance to
+      // notice the draft began; the first pick clock starts after the grace.
+      r.startsAt = Date.now() + START_DELAY_SECONDS * 1000;
+      r.deadline = r.startsAt + r.pickSeconds * 1000;
       return null;
     });
 

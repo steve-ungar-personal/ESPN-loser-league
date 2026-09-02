@@ -40,6 +40,12 @@ export interface Room {
   status: RoomStatus;
   /** Commissioner-held freeze. Status stays 'active'; the clock stops. */
   paused: boolean;
+  /**
+   * Grace period after Start so every browser can catch up before anyone is
+   * on a running clock. Picks are refused until this passes. Null once the
+   * draft is properly under way.
+   */
+  startsAt: number | null;
   pickSeconds: number;
   deadline: number | null;
   commissionerId: string | null;
@@ -53,6 +59,7 @@ export function emptyRoom(): Room {
   return {
     status: 'lobby',
     paused: false,
+    startsAt: null,
     pickSeconds: 90,
     deadline: null,
     commissionerId: null,
