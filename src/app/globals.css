@@ -131,10 +131,21 @@ td.name { font-weight: 600; }
   padding: 7px 13px; border: 1px solid var(--line);
   border-radius: 10px; background: var(--panel);
 }
-.clockbox.turn { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-dim);
-                 background: #16212e; }
-.clockmeta { display: flex; flex-direction: column; gap: 1px; }
-.onclockname { font-size: 15px; white-space: nowrap; }
+/* No background unless it is your pick; then green -> yellow -> red.
+   Deliberately light so it is unmissable on a dark board, with dark text. */
+.clockbox.mine-ok     { background: #b8efc9; border-color: #2f9c5c; color: #062611; }
+.clockbox.mine-warn   { background: #f6e3a8; border-color: #c98c1d; color: #2d2100; }
+.clockbox.mine-danger { background: #f7bdbd; border-color: #c93b3b; color: #2c0707; }
+.clockbox.mine-ok .note,
+.clockbox.mine-warn .note,
+.clockbox.mine-danger .note { color: inherit; opacity: 0.72; }
+.clockbox.mine-ok .clock,
+.clockbox.mine-warn .clock,
+.clockbox.mine-danger .clock { color: inherit; }
+.clockmeta { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 auto; }
+/* Wraps rather than shoving the clock out of view when text is scaled up. */
+.onclockname { font-size: 15px; overflow-wrap: anywhere; }
+.clock { flex: 0 0 auto; }
 
 .donepanel {
   display: flex; justify-content: space-between; align-items: center;
@@ -318,6 +329,13 @@ label.msort { display: none; }
   th:nth-child(2), td:nth-child(2),
   th:nth-child(n+5), td:nth-child(n+5) { display: none; }
 
+  /* Reclaim horizontal room: the POS chip and Draft button were the two
+     widest fixed costs per row. */
+  td:nth-child(3), th:nth-child(3) { padding-left: 2px; padding-right: 2px; }
+  .pos { min-width: 26px; padding: 2px 3px; }
+  td.act, th.act { padding: 3px 4px; }
+  td.act button.sm { padding: 6px 8px; font-size: 11.5px; }
+
   .mstats {
     display: block; margin-top: 2px;
     font-size: 11.5px; font-weight: 500; color: var(--muted);
@@ -330,9 +348,11 @@ label.msort { display: none; }
   /* Headers are hidden, so sorting needs its own control. */
   label.msort {
     display: flex; align-items: center; gap: 6px; flex: 1 1 100%;
+    min-width: 0; /* without this the long option text refuses to shrink */
     font-size: 12px; color: var(--muted);
   }
   label.msort select { flex: 1 1 auto; min-width: 0; font-size: 15px; padding: 7px 9px; }
+  label.msort button.sm { flex: 0 0 auto; }
 
   /* Roster rows are tighter so the panel does not eat a whole screen. */
   .slotgrid { gap: 4px 7px; }

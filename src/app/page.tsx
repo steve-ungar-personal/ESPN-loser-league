@@ -135,6 +135,17 @@ export default function Page() {
     return Math.max(0, Math.ceil((room.deadline - (Date.now() + skew.current)) / 1000));
   }, [room, tick]);
 
+  // Clock box colour: plain when it is not your pick, then green -> yellow ->
+  // red as your own clock runs down.
+  const urgency =
+    !isMyTurn || secondsLeft === null
+      ? ''
+      : secondsLeft > 10
+        ? 'mine-ok'
+        : secondsLeft >= 6
+          ? 'mine-warn'
+          : 'mine-danger';
+
   async function post(url: string, payload: Record<string, unknown>) {
     setError(null);
     const res = await fetch(url, {
@@ -270,7 +281,7 @@ export default function Page() {
           </p>
         </div>
 
-        <div className={room.paused ? 'clockbox pausedbox' : isMyTurn ? 'clockbox turn' : 'clockbox'}>
+        <div className={room.paused ? 'clockbox pausedbox' : urgency ? `clockbox ${urgency}` : 'clockbox'}>
           {done ? (
             <strong>Draft complete — {room.picks.length} picks made.</strong>
           ) : (
