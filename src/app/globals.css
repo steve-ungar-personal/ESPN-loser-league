@@ -231,23 +231,22 @@ li.team.onclock {
   font-size: 9px; font-weight: 700; line-height: 16px; text-align: center;
 }
 
-/* Still-open slots are the useful signal - what each team STILL NEEDS - so
-   they get the contrast. Filled slots fade back once they stop mattering. */
+/* What a team STILL NEEDS is the useful signal, so open slots carry the
+   position colour in bold. Filled slots drop to grey once they stop mattering. */
 .box.open {
-  background: var(--panel-2); border: 1px solid var(--muted);
-  color: var(--text); line-height: 14px;
+  background: var(--panel-2); border: 1px solid currentColor;
+  font-weight: 800; line-height: 14px;
 }
+.box.open.s-QB   { color: var(--qb); }
+.box.open.s-RB   { color: var(--rb); }
+.box.open.s-TEWR { color: var(--wr); }
+.box.open.s-K    { color: var(--k); }
 
-/* Faded, but keep the hue so you can still read WHAT filled the slot. */
+/* Drafted: grey and dim, but still shows which position filled the slot. */
 .box.QB, .box.RB, .box.WR, .box.TE, .box.K {
   background: transparent; border: 1px dashed var(--line);
-  font-weight: 600; line-height: 14px; opacity: 0.5;
+  color: var(--muted); font-weight: 600; line-height: 14px; opacity: 0.6;
 }
-.box.QB { color: var(--qb); }
-.box.RB { color: var(--rb); }
-.box.WR { color: var(--wr); }
-.box.TE { color: var(--te); }
-.box.K  { color: var(--k); }
 
 .tcount {
   flex: none; width: 26px; text-align: right;

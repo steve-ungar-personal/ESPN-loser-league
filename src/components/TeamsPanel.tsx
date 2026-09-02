@@ -57,7 +57,11 @@ export default function TeamsPanel({
                       {player.pos}
                     </span>
                   ) : (
-                    <span key={i} className="box open" title={`open ${EMPTY_LABEL[key]}`}>
+                    <span
+                      key={i}
+                      className={`box open s-${key}`}
+                      title={`still needs ${EMPTY_LABEL[key]}`}
+                    >
                       {EMPTY_LABEL[key]}
                     </span>
                   );
@@ -72,7 +76,7 @@ export default function TeamsPanel({
         })}
       </ul>
       <p className="note legend">
-        Slots: QB · RB · RB · 3× TE/WR · K — <strong>bright = still open</strong>, faded = drafted
+        Slots: QB · RB · RB · 3× TE/WR · K — <strong>coloured = still needed</strong>, grey = drafted
       </p>
     </div>
   );
